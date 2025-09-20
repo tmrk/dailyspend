@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+    <meta name="theme-color" content="#667eea" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="DailySpend" />
+    <meta name="description" content="Calculate your daily spending budget until payday with real-time currency conversion" />
+    
+    <!-- Favicons and PWA icons -->
+    <link rel="icon" href="/public/icons/icon-192.png" />
+    <link rel="apple-touch-icon" href="/public/icons/icon-192.png" />
+    <link rel="manifest" href="/public/manifest.webmanifest" />
+    
+    <!-- Open Graph / Social Media -->
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="DailySpend - Daily Budget Calculator" />
+    <meta property="og:description" content="Calculate your daily spending budget until payday with real-time currency conversion" />
+    <meta property="og:image" content="/public/icons/icon-512.png" />
+    
+    <!-- Twitter -->
+    <meta name="twitter:card" content="summary" />
+    <meta name="twitter:title" content="DailySpend - Daily Budget Calculator" />
+    <meta name="twitter:description" content="Calculate your daily spending budget until payday with real-time currency conversion" />
+    
+    <title>DailySpend - Daily Budget Calculator</title>
+    
+    <!-- Critical CSS for faster loading -->
+    <style>
+      * { 
+        box-sizing: border-box; 
+      }
+      
+      html, body, #root { 
+        height: 100%; 
+        margin: 0; 
+        padding: 0; 
+      }
+      
+      body { 
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        overflow-x: hidden;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      
+      /* Loading spinner */
+      .loading-spinner {
+        position: fixed;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 40px;
+        height: 40px;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+        border-top: 3px solid white;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      
+      @keyframes spin {
+        0% { transform: translate(-50%, -50%) rotate(0deg); }
+        100% { transform: translate(-50%, -50%) rotate(360deg); }
+      }
+      
+      /* Hide loading spinner when app loads */
+      .app-loaded .loading-spinner {
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root">
+      <!-- Loading spinner shown while React app loads -->
+      <div class="loading-spinner"></div>
+    </div>
+    <script type="module" src="/src/main.jsx"></script>
+    
+    <!-- Add class when app loads to hide loading spinner -->
+    <script>
+      window.addEventListener('load', () => {
+        document.body.classList.add('app-loaded');
+      });
+    </script>
+  </body>
+</html>
