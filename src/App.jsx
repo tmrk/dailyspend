@@ -114,7 +114,7 @@ export default function App(){
   // register service worker
   useEffect(() => {
     if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.register('/src/sw.js').catch(console.error)
+      navigator.serviceWorker.register('/dailyspend/sw.js').catch(console.error)
     }
   }, [])
 
