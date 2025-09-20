@@ -1,0 +1,75 @@
+<svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#667eea;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#764ba2;stop-opacity:1" />
+    </linearGradient>
+    <linearGradient id="coin" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#22d3ee;stop-opacity:1" />
+    </linearGradient>
+    <filter id="glow">
+      <feGaussianBlur stdDeviation="6" result="coloredBlur"/>
+      <feMerge> 
+        <feMergeNode in="coloredBlur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+  </defs>
+  
+  <!-- Background -->
+  <rect width="512" height="512" rx="80" ry="80" fill="url(#bg)"/>
+  
+  <!-- Calendar Base -->
+  <rect x="40" y="30" width="432" height="450" rx="30" ry="30" fill="rgba(255,255,255,0.15)" stroke="rgba(255,255,255,0.3)" stroke-width="3"/>
+  
+  <!-- Calendar Header -->
+  <rect x="40" y="30" width="432" height="90" rx="30" ry="30" fill="rgba(255,255,255,0.25)"/>
+  <rect x="40" y="100" width="432" height="20" fill="rgba(255,255,255,0.25)"/>
+  
+  <!-- Calendar Rings -->
+  <circle cx="120" cy="20" r="12" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="120" cy="20" r="6" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="3"/>
+  <circle cx="392" cy="20" r="12" fill="rgba(255,255,255,0.4)"/>
+  <circle cx="392" cy="20" r="6" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="3"/>
+  
+  <!-- Calendar Grid Lines -->
+  <line x1="40" y1="170" x2="472" y2="170" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <line x1="40" y1="230" x2="472" y2="230" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <line x1="40" y1="290" x2="472" y2="290" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <line x1="40" y1="350" x2="472" y2="350" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  <line x1="40" y1="410" x2="472" y2="410" stroke="rgba(255,255,255,0.25)" stroke-width="2"/>
+  
+  <line x1="110" y1="120" x2="110" y2="480" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <line x1="170" y1="120" x2="170" y2="480" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <line x1="230" y1="120" x2="230" y2="480" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <line x1="290" y1="120" x2="290" y2="480" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <line x1="350" y1="120" x2="350" y2="480" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  <line x1="410" y1="120" x2="410" y2="480" stroke="rgba(255,255,255,0.15)" stroke-width="2"/>
+  
+  <!-- Main Coin -->
+  <circle cx="256" cy="300" r="90" fill="url(#coin)" filter="url(#glow)" opacity="0.95"/>
+  <circle cx="256" cy="300" r="70" fill="none" stroke="rgba(255,255,255,0.3)" stroke-width="4"/>
+  
+  <!-- Currency Symbol -->
+  <text x="256" y="330" font-family="system-ui, -apple-system, sans-serif" font-size="80" font-weight="800" text-anchor="middle" fill="white" opacity="0.9">$</text>
+  
+  <!-- Small coins for daily spending concept -->
+  <circle cx="140" cy="200" r="22" fill="url(#coin)" opacity="0.8"/>
+  <text x="140" y="210" font-family="system-ui" font-size="22" font-weight="700" text-anchor="middle" fill="white">$</text>
+  
+  <circle cx="372" cy="380" r="22" fill="url(#coin)" opacity="0.8"/>
+  <text x="372" y="390" font-family="system-ui" font-size="22" font-weight="700" text-anchor="middle" fill="white">$</text>
+  
+  <circle cx="75" cy="320" r="18" fill="url(#coin)" opacity="0.7"/>
+  <text x="75" y="328" font-family="system-ui" font-size="18" font-weight="700" text-anchor="middle" fill="white">$</text>
+  
+  <!-- Highlighted day marker -->
+  <circle cx="256" cy="145" r="8" fill="rgba(74,222,128,1)" stroke="white" stroke-width="2"/>
+  
+  <!-- Other day markers -->
+  <circle cx="140" cy="145" r="4" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="200" cy="145" r="4" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="310" cy="145" r="4" fill="rgba(255,255,255,0.6)"/>
+  <circle cx="372" cy="145" r="4" fill="rgba(255,255,255,0.6)"/>
+</svg>
