@@ -30,34 +30,53 @@ html, body, #root {
   padding: 0;
 }
 
+html {
+  /* Prevent pull-to-refresh on mobile */
+  overscroll-behavior: none;
+  /* Prevent rubber band effect */
+  overflow: hidden;
+}
+
 body {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   background: var(--primary-gradient);
   color: var(--text-white);
-  overflow-x: hidden;
+  overflow: hidden;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  /* Prevent iOS rubber band effect */
+  position: fixed;
+  width: 100%;
+  height: 100%;
+  /* iOS safe area support */
+  padding-top: env(safe-area-inset-top);
+  padding-bottom: env(safe-area-inset-bottom);
+  padding-left: env(safe-area-inset-left);
+  padding-right: env(safe-area-inset-right);
 }
 
 /* Main App Container */
 .app {
-  min-height: 100vh;
+  height: 100%;
   background: var(--primary-gradient);
   color: var(--text-white);
   overflow: hidden;
+  display: flex;
+  flex-direction: column;
 }
 
 /* Header */
 .app-header {
-  padding: 20px 20px 0;
+  padding: 16px 20px;
   display: flex;
   align-items: center;
   justify-content: space-between;
+  flex-shrink: 0;
 }
 
 .app-title {
   margin: 0;
-  font-size: 24px;
+  font-size: 22px;
   font-weight: 700;
   background: linear-gradient(45deg, #fff, #f0f8ff);
   background-clip: text;
@@ -68,15 +87,15 @@ body {
 .header-controls {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
 }
 
 .offline-indicator {
   background: rgba(255, 107, 107, 0.9);
   color: white;
-  padding: 6px 12px;
-  border-radius: 20px;
-  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 11px;
   font-weight: 600;
   backdrop-filter: blur(10px);
 }
@@ -84,10 +103,10 @@ body {
 .settings-btn {
   background: var(--glass-bg);
   border: none;
-  border-radius: 12px;
-  padding: 12px;
+  border-radius: 10px;
+  padding: 10px;
   color: white;
-  font-size: 20px;
+  font-size: 18px;
   cursor: pointer;
   backdrop-filter: blur(10px);
   transition: all 0.2s ease;
@@ -101,17 +120,19 @@ body {
 
 /* Main Content */
 .main-content {
-  padding: 20px;
+  padding: 0 16px 16px;
   display: flex;
   flex-direction: column;
-  gap: 24px;
+  gap: 16px;
+  flex: 1;
+  overflow: hidden;
 }
 
 /* Glass Cards */
 .glass-card {
   background: var(--glass-bg);
-  border-radius: 20px;
-  padding: 24px;
+  border-radius: 16px;
+  padding: 16px;
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
   box-shadow: var(--shadow-glass);
@@ -136,95 +157,100 @@ body {
   box-shadow: var(--shadow-glass-strong);
 }
 
-.conversion-card::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: -100%;
-  width: 100%;
-  height: 100%;
-  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
-  transition: left 0.5s;
-}
-
-.conversion-card.active::before {
-  left: 100%;
-}
-
 /* Input Row Container for side-by-side layout */
 .input-row-container {
   display: flex;
-  gap: 16px;
+  gap: 12px;
 }
 
 .half-width {
   flex: 1;
+  min-width: 0; /* Allow flex items to shrink */
 }
 
-.full-width {
-  width: 100%;
-  margin-top: 12px;
-}
-
-/* Form Elements */
-.field-label {
-  display: block;
-  margin-bottom: 12px;
-  font-size: 16px;
-  font-weight: 600;
-  opacity: 0.9;
-}
-
-.input-row {
+/* Inline Field Layout */
+.inline-field {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
-.main-input {
+.field-label-inline {
+  font-size: 14px;
+  font-weight: 600;
+  opacity: 0.9;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.main-input-inline {
   flex: 1;
-  background: var(--glass-bg-strong);
+  background: rgba(255, 255, 255, 0.9);
   border: 2px solid transparent;
-  border-radius: 16px;
-  padding: 16px 20px;
-  font-size: 18px;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-dark);
   outline: none;
   transition: all 0.2s ease;
+  text-align: right;
+  min-width: 0;
 }
 
-.main-input:focus {
+.main-input-inline:focus {
   border-color: var(--accent-green);
   box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
 }
 
-.main-input::placeholder {
+.main-input-inline::placeholder {
   color: #999;
+  text-align: right;
 }
 
-.currency-btn {
+.currency-btn-inline {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  padding: 16px 20px;
+  border-radius: 10px;
+  padding: 12px 14px;
   color: white;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(10px);
-  min-width: 80px;
+  min-width: 60px;
   transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.currency-btn:hover:not(:disabled) {
+.currency-btn-inline:hover:not(:disabled) {
   background: rgba(255, 255, 255, 0.3);
   transform: translateY(-1px);
 }
 
-.currency-btn:disabled {
+.currency-btn-inline:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+.date-input-inline {
+  flex: 1;
+  background: rgba(255, 255, 255, 0.9);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-dark);
+  outline: none;
+  transition: all 0.2s ease;
+  cursor: pointer;
+  min-width: 0;
+}
+
+.date-input-inline:focus {
+  border-color: var(--accent-green);
+  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
 }
 
 /* Currency Toggle Section */
@@ -232,29 +258,31 @@ body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 12px;
 }
 
 .toggle-left {
   display: flex;
   align-items: center;
-  gap: 16px;
+  gap: 12px;
   flex: 1;
+  min-width: 0;
 }
 
 .toggle-content {
   flex: 1;
+  min-width: 0;
 }
 
 .toggle-text {
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
 }
 
 .toggle-subtitle {
-  font-size: 14px;
+  font-size: 12px;
   opacity: 0.8;
   font-weight: 400;
 }
@@ -267,21 +295,22 @@ body {
 .toggle-right {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 10px;
+  flex-shrink: 0;
 }
 
 .currency-select-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: 10px;
+  padding: 10px 12px;
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(10px);
   transition: all 0.2s ease;
-  min-width: 60px;
+  min-width: 55px;
 }
 
 .currency-select-btn:hover:not(:disabled) {
@@ -302,8 +331,9 @@ body {
 .toggle-switch {
   position: relative;
   display: inline-block;
-  width: 52px;
-  height: 28px;
+  width: 48px;
+  height: 26px;
+  flex-shrink: 0;
 }
 
 .toggle-switch input {
@@ -321,7 +351,7 @@ body {
   bottom: 0;
   background-color: rgba(255, 255, 255, 0.3);
   transition: 0.3s;
-  border-radius: 14px;
+  border-radius: 13px;
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
@@ -333,8 +363,8 @@ body {
 .toggle-slider::before {
   position: absolute;
   content: '';
-  height: 22px;
-  width: 22px;
+  height: 20px;
+  width: 20px;
   left: 3px;
   bottom: 3px;
   background-color: white;
@@ -344,64 +374,17 @@ body {
 }
 
 .toggle-slider.active::before {
-  transform: translateX(24px);
-}
-
-/* Date Input */
-.date-input {
-  width: 100%;
-  background: var(--glass-bg-strong);
-  border: 2px solid transparent;
-  border-radius: 16px;
-  padding: 16px 20px;
-  font-size: 16px;
-  font-weight: 600;
-  color: var(--text-dark);
-  outline: none;
-  transition: all 0.2s ease;
-  cursor: pointer;
-}
-
-.date-input:focus {
-  border-color: var(--accent-green);
-  box-shadow: 0 0 0 3px rgba(74, 222, 128, 0.1);
-}
-
-/* Updated currency button for inline layout */
-.currency-btn {
-  background: rgba(255, 255, 255, 0.2);
-  border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  padding: 16px 20px;
-  color: white;
-  font-size: 16px;
-  font-weight: 600;
-  cursor: pointer;
-  backdrop-filter: blur(10px);
-  min-width: 80px;
-  transition: all 0.2s ease;
-  flex-shrink: 0;
-}
-
-.currency-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.3);
-  transform: translateY(-1px);
-}
-
-.currency-btn:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
+  transform: translateX(22px);
 }
 
 /* Result Display */
 .result-card {
   background: var(--glass-bg);
-  border-radius: 24px;
-  padding: 40px 24px;
+  border-radius: 20px;
+  padding: 28px 20px;
   text-align: center;
   backdrop-filter: blur(20px);
   border: 1px solid var(--glass-border);
-  margin-bottom: 20px;
   box-shadow: var(--shadow-glass-strong);
   position: relative;
   overflow: hidden;
@@ -426,11 +409,11 @@ body {
 .amount-display {
   position: relative;
   z-index: 1;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 
 .big-number {
-  font-size: clamp(64px, 16vw, 96px);
+  font-size: clamp(56px, 14vw, 84px);
   font-weight: 800;
   line-height: 0.9;
   margin-bottom: 8px;
@@ -439,10 +422,11 @@ body {
   -webkit-background-clip: text;
   color: transparent;
   letter-spacing: -0.02em;
+  transition: all 0.3s ease;
 }
 
 .currency-label {
-  font-size: 18px;
+  font-size: 16px;
   font-weight: 600;
   color: var(--text-white);
   opacity: 0.8;
@@ -450,23 +434,23 @@ body {
   letter-spacing: 0.1em;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 8px;
-  padding: 6px 12px;
+  padding: 4px 10px;
   display: inline-block;
   backdrop-filter: blur(10px);
   border: 1px solid rgba(255, 255, 255, 0.15);
 }
 
 .result-subtitle {
-  font-size: 16px;
+  font-size: 14px;
   opacity: 0.9;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-weight: 500;
   position: relative;
   z-index: 1;
 }
 
 .result-meta {
-  font-size: 14px;
+  font-size: 13px;
   opacity: 0.7;
   margin-bottom: 0;
   position: relative;
@@ -474,15 +458,15 @@ body {
 }
 
 .result-meta.with-conversion {
-  margin-bottom: 12px;
+  margin-bottom: 10px;
 }
 
 .conversion-info {
-  font-size: 14px;
+  font-size: 12px;
   opacity: 0.8;
   background: rgba(255, 255, 255, 0.1);
-  border-radius: 12px;
-  padding: 8px 16px;
+  border-radius: 10px;
+  padding: 6px 12px;
   display: inline-block;
   position: relative;
   z-index: 1;
@@ -491,7 +475,7 @@ body {
 }
 
 .error-message {
-  font-size: 18px;
+  font-size: 16px;
   color: var(--error-red);
   font-weight: 600;
   position: relative;
@@ -499,7 +483,7 @@ body {
 }
 
 .placeholder-text {
-  font-size: 18px;
+  font-size: 15px;
   opacity: 0.7;
   font-weight: 500;
   position: relative;
@@ -509,19 +493,20 @@ body {
 /* PWA Install Section */
 .install-section {
   text-align: center;
+  padding: 8px 0;
 }
 
 .install-btn {
   background: rgba(255, 255, 255, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.3);
-  border-radius: 12px;
-  padding: 12px 24px;
+  border-radius: 10px;
+  padding: 10px 20px;
   color: white;
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 600;
   cursor: pointer;
   backdrop-filter: blur(10px);
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   transition: all 0.2s ease;
 }
 
@@ -531,7 +516,7 @@ body {
 }
 
 .install-hint {
-  font-size: 12px;
+  font-size: 11px;
   opacity: 0.7;
   font-weight: 500;
 }
@@ -562,11 +547,12 @@ body {
   border-top-left-radius: 24px;
   border-top-right-radius: 24px;
   width: 100%;
-  padding: 24px;
+  padding: 20px;
   color: var(--text-dark);
   overflow: auto;
   animation: slideUp 0.3s ease;
   box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.2);
+  max-height: 60vh;
 }
 
 @keyframes slideUp {
@@ -584,16 +570,16 @@ body {
 }
 
 .modal-handle {
-  width: 40px;
+  width: 36px;
   height: 4px;
   background: #ddd;
   border-radius: 2px;
-  margin: 0 auto 20px;
+  margin: 0 auto 16px;
 }
 
 .modal-title {
-  margin: 0 0 20px;
-  font-size: 20px;
+  margin: 0 0 16px;
+  font-size: 18px;
   font-weight: 700;
   color: var(--text-dark);
 }
@@ -603,17 +589,17 @@ body {
   max-height: 40vh;
   overflow-y: auto;
   display: grid;
-  gap: 8px;
+  gap: 6px;
 }
 
 .currency-item {
   background: none;
   border: 1px solid var(--border-light);
-  border-radius: 12px;
-  padding: 16px;
+  border-radius: 10px;
+  padding: 14px;
   text-align: left;
   cursor: pointer;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 500;
   transition: all 0.2s ease;
   color: var(--text-dark);
@@ -632,13 +618,13 @@ body {
 
 /* Settings Form */
 .settings-field {
-  margin-bottom: 24px;
+  margin-bottom: 20px;
 }
 
 .settings-label {
   display: block;
   margin-bottom: 8px;
-  font-size: 16px;
+  font-size: 15px;
   font-weight: 600;
   color: var(--text-dark);
 }
@@ -647,9 +633,9 @@ body {
 .settings-input {
   width: 100%;
   border: 2px solid var(--border-light);
-  border-radius: 12px;
-  padding: 16px;
-  font-size: 16px;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 15px;
   background: white;
   transition: all 0.2s ease;
   color: var(--text-dark);
@@ -664,7 +650,7 @@ body {
 
 .settings-hint {
   color: var(--text-muted);
-  font-size: 14px;
+  font-size: 13px;
   margin-top: 4px;
   display: block;
 }
@@ -672,18 +658,18 @@ body {
 /* Settings Actions */
 .settings-actions {
   display: flex;
-  gap: 12px;
+  gap: 10px;
   justify-content: flex-end;
-  margin-top: 32px;
+  margin-top: 24px;
 }
 
 .btn-danger {
   background: #ef4444;
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 16px;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -698,9 +684,9 @@ body {
   background: #6366f1;
   color: white;
   border: none;
-  border-radius: 12px;
-  padding: 12px 20px;
-  font-size: 16px;
+  border-radius: 10px;
+  padding: 11px 18px;
+  font-size: 15px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -711,25 +697,19 @@ body {
   transform: translateY(-1px);
 }
 
-/* Loading States */
-.loading {
-  opacity: 0.6;
-  pointer-events: none;
-}
-
 /* Smooth scrollbar for currency list */
 .currency-list::-webkit-scrollbar {
-  width: 8px;
+  width: 6px;
 }
 
 .currency-list::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .currency-list::-webkit-scrollbar-thumb {
   background: #c1c1c1;
-  border-radius: 4px;
+  border-radius: 3px;
 }
 
 .currency-list::-webkit-scrollbar-thumb:hover {
@@ -739,22 +719,22 @@ body {
 /* Responsive Design */
 @media (max-width: 480px) {
   .main-content {
-    padding: 16px;
-    gap: 20px;
+    padding: 0 12px 12px;
+    gap: 14px;
   }
   
   .glass-card {
-    padding: 20px;
+    padding: 14px;
   }
   
   .result-card {
-    padding: 24px 20px;
+    padding: 24px 16px;
   }
   
   .currency-toggle {
     flex-direction: column;
     align-items: stretch;
-    gap: 16px;
+    gap: 12px;
   }
   
   .toggle-right {
@@ -763,38 +743,91 @@ body {
   
   .input-row-container {
     flex-direction: column;
-    gap: 16px;
+    gap: 12px;
   }
 
   .modal-panel {
-    padding: 20px;
+    padding: 18px;
   }
 }
 
 @media (max-width: 360px) {
   .app-header {
-    padding: 16px 16px 0;
+    padding: 14px 16px;
   }
   
   .main-content {
+    padding: 0 10px 10px;
+    gap: 12px;
+  }
+  
+  .glass-card {
     padding: 12px;
   }
   
-  .input-row {
-    flex-direction: column;
-    gap: 12px;
+  .inline-field {
+    gap: 6px;
   }
   
-  .currency-btn {
-    width: 100%;
+  .field-label-inline {
+    font-size: 13px;
   }
   
-  .input-row-container {
-    flex-direction: column;
-    gap: 12px;
+  .main-input-inline {
+    padding: 10px 12px;
+    font-size: 15px;
+  }
+  
+  .currency-btn-inline {
+    padding: 10px 12px;
+    font-size: 13px;
+    min-width: 55px;
+  }
+  
+  .date-input-inline {
+    padding: 10px 12px;
+    font-size: 13px;
   }
 
   .settings-actions {
     flex-direction: column;
+  }
+}
+
+/* iOS specific fixes */
+@supports (-webkit-touch-callout: none) {
+  /* iOS Safari specific */
+  body {
+    /* Additional iOS padding */
+    padding-top: max(env(safe-area-inset-top), 20px);
+  }
+  
+  .app {
+    height: 100vh;
+    height: -webkit-fill-available;
+  }
+  
+  /* Prevent iOS zoom on input focus */
+  input, select, textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Landscape mode adjustments */
+@media (max-height: 600px) and (orientation: landscape) {
+  .result-card {
+    padding: 20px 16px;
+  }
+  
+  .big-number {
+    font-size: clamp(40px, 10vw, 60px);
+  }
+  
+  .main-content {
+    gap: 10px;
+  }
+  
+  .glass-card {
+    padding: 12px;
   }
 }

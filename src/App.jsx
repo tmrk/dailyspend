@@ -8,11 +8,12 @@ const DEFAULTS = {
   srcCurrency: 'EUR',
   dstCurrency: 'USD',
   paydate: '',
-  useConversion: false, // Changed default to false for better UX
+  useConversion: false,
   provider: 'frankfurter',
   apiKey: '',
   lastRate: null,
-  cachedCurrencies: null // Added for caching currencies
+  cachedCurrencies: null,
+  lastPerDay: null // Store last calculated per day amount
 }
 
 function nextMonthFifteenthISO() {
@@ -26,19 +27,43 @@ function nextMonthFifteenthISO() {
   return `${yyyy}-${mm}-${dd}`
 }
 
+function formatNumberWithCommas(value) {
+  if (!value) return ''
+  // Remove non-numeric characters except decimal point
+  const cleaned = value.toString().replace(/[^\d.]/g, '')
+  const parts = cleaned.split('.')
+  // Add thousand separators
+  parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',')
+  // Limit decimals to 2 places
+  if (parts[1]) {
+    parts[1] = parts[1].substring(0, 2)
+  }
+  return parts.join('.')
+}
+
 export default function App(){
   const [currencies, setCurrencies] = useState([])
   const [currenciesLoading, setCurrenciesLoading] = useState(true)
   const [settingsOpen, setSettingsOpen] = useState(false)
   const [currencyPickerOpen, setCurrencyPickerOpen] = useState(false)
-  const [currencyPickerType, setCurrencyPickerType] = useState('src') // 'src' or 'dst'
+  const [currencyPickerType, setCurrencyPickerType] = useState('src')
   const [isOnline, setIsOnline] = useState(navigator.onLine)
+  const [isStandalone, setIsStandalone] = useState(false)
+  const [animatedValue, setAnimatedValue] = useState(null)
 
   const [state, setState] = useState(() => {
     const s = { ...DEFAULTS, ...loadState() }
     if (!s.paydate) s.paydate = nextMonthFifteenthISO()
     return s
   })
+
+  // Check if running as standalone PWA
+  useEffect(() => {
+    const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+                      window.navigator.standalone === true ||
+                      document.referrer.includes('android-app://')
+    setIsStandalone(standalone)
+  }, [])
 
   // persist state
   useEffect(() => { 
@@ -63,22 +88,18 @@ export default function App(){
   useEffect(() => {
     async function loadCurrencies() {
       try {
-        // Try to load from cache first
         if (state.cachedCurrencies && state.cachedCurrencies.length > 0) {
           setCurrencies(state.cachedCurrencies)
           setCurrenciesLoading(false)
         }
         
-        // Try to fetch fresh data if online
         if (isOnline) {
           const freshCurrencies = await listCurrencies()
           setCurrencies(freshCurrencies)
-          // Cache the currencies
           setState(s => ({ ...s, cachedCurrencies: freshCurrencies }))
         }
       } catch (error) {
         console.error('Failed to load currencies:', error)
-        // If we have cached currencies, use them
         if (state.cachedCurrencies && state.cachedCurrencies.length > 0) {
           setCurrencies(state.cachedCurrencies)
         }
@@ -90,7 +111,7 @@ export default function App(){
     loadCurrencies()
   }, [isOnline])
 
-  // install prompt (Android / desktop PWA)
+  // install prompt
   useEffect(() => {
     let deferred = null
     const handler = (e) => {
@@ -121,7 +142,7 @@ export default function App(){
   // derived calculations
   const { perDay, daysLeft, amountDisplay, convertedDisplay, rateLine, error } = useMemo(() => {
     const out = { perDay: null, daysLeft: 0, amountDisplay: null, convertedDisplay: null, rateLine: '', error: '' }
-    const balance = Number(state.balance || 0)
+    const balance = Number(state.balance?.replace(/,/g, '') || 0)
     if (!balance || !state.paydate) return out
 
     const now = new Date()
@@ -136,28 +157,64 @@ export default function App(){
     }
     out.daysLeft = days
 
-    // Original amount and per day in source currency
     out.amountDisplay = formatMoney(balance, state.srcCurrency)
     const originalPerDay = balance / days
 
-    // If conversion is enabled and we have a valid rate, show converted amounts
     if (state.useConversion && state.srcCurrency !== state.dstCurrency && state.lastRate && 
         state.lastRate.from === state.srcCurrency && state.lastRate.to === state.dstCurrency) {
       const convertedAmount = balance * state.lastRate.value
       const convertedPerDay = convertedAmount / days
       out.convertedDisplay = formatMoney(convertedAmount, state.dstCurrency)
-      out.perDay = convertedPerDay // This will be displayed in destination currency
+      out.perDay = convertedPerDay
       
       const rateAge = Date.now() - state.lastRate.timestamp
-      const isStale = rateAge > 24 * 60 * 60 * 1000 // 24 hours
+      const isStale = rateAge > 24 * 60 * 60 * 1000
       out.rateLine = `1 ${state.srcCurrency} = ${state.lastRate.value.toFixed(4)} ${state.dstCurrency}${isStale ? ' (cached)' : ''}`
     } else {
-      // No conversion - use original currency
       out.perDay = originalPerDay
     }
 
     return out
   }, [state])
+
+  // Animate number changes
+  useEffect(() => {
+    if (perDay !== null && perDay !== undefined) {
+      const lastValue = state.lastPerDay
+      
+      if (lastValue !== null && lastValue !== perDay && Math.abs(lastValue - perDay) > 0.01) {
+        // Animate from last value to new value
+        const startValue = lastValue
+        const endValue = perDay
+        const duration = 1000 // 1 second
+        const startTime = Date.now()
+        
+        const animate = () => {
+          const elapsed = Date.now() - startTime
+          const progress = Math.min(elapsed / duration, 1)
+          
+          // Easing function (ease-out)
+          const easeOut = 1 - Math.pow(1 - progress, 3)
+          const currentValue = startValue + (endValue - startValue) * easeOut
+          
+          setAnimatedValue(currentValue)
+          
+          if (progress < 1) {
+            requestAnimationFrame(animate)
+          } else {
+            setState(s => ({ ...s, lastPerDay: perDay }))
+          }
+        }
+        
+        animate()
+      } else {
+        setAnimatedValue(perDay)
+        if (lastValue === null) {
+          setState(s => ({ ...s, lastPerDay: perDay }))
+        }
+      }
+    }
+  }, [perDay])
 
   // Auto-fetch rates
   const fetchRateRef = useRef(false)
@@ -172,14 +229,13 @@ export default function App(){
   }, [state.useConversion, state.srcCurrency, state.dstCurrency, state.provider, state.apiKey, isOnline])
 
   async function maybeFetchRate(){
-    if (!isOnline) return // Don't fetch if offline
+    if (!isOnline) return
     if (!(state.useConversion && state.srcCurrency !== state.dstCurrency)) return
     
-    // Check if we have a recent rate (less than 1 hour old)
     if (state.lastRate && state.lastRate.from === state.srcCurrency && 
         state.lastRate.to === state.dstCurrency &&
         (Date.now() - state.lastRate.timestamp) < 60 * 60 * 1000) {
-      return // Use cached rate
+      return
     }
     
     try {
@@ -192,6 +248,19 @@ export default function App(){
 
   function onChange(k, v){ 
     setState(s => ({ ...s, [k]: v })) 
+  }
+
+  function handleBalanceChange(e) {
+    const value = e.target.value
+    // Allow only numbers, commas, and one decimal point
+    if (value === '' || /^[\d,]*\.?\d{0,2}$/.test(value)) {
+      onChange('balance', value)
+    }
+  }
+
+  function handleBalanceBlur(e) {
+    const formatted = formatNumberWithCommas(e.target.value)
+    onChange('balance', formatted)
   }
 
   function openCurrencyPicker(type) {
@@ -209,17 +278,15 @@ export default function App(){
   }
 
   const displayCurrency = (state.useConversion && state.srcCurrency !== state.dstCurrency && state.lastRate) ? state.dstCurrency : state.srcCurrency
+  const displayValue = animatedValue !== null ? animatedValue : perDay
 
   return (
     <div className="app">
-      {/* Header */}
       <div className="app-header">
         <h1 className="app-title">DailySpend</h1>
         <div className="header-controls">
           {!isOnline && (
-            <div className="offline-indicator">
-              Offline
-            </div>
+            <div className="offline-indicator">Offline</div>
           )}
           <button
             onClick={() => setSettingsOpen(true)}
@@ -231,31 +298,24 @@ export default function App(){
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="main-content">
         
         {/* Result Display */}
         <div className="result-card">
           {error ? (
-            <div className="error-message">
-              {error}
-            </div>
-          ) : perDay && daysLeft ? (
+            <div className="error-message">{error}</div>
+          ) : displayValue && daysLeft ? (
             <>
               <div className="amount-display">
                 <div className="big-number">
-                  {perDay ? Number(perDay).toLocaleString(undefined, { 
+                  {Number(displayValue).toLocaleString('en-GB', { 
                     minimumFractionDigits: 0,
                     maximumFractionDigits: 2 
-                  }) : '0'}
+                  })}
                 </div>
-                <div className="currency-label">
-                  {displayCurrency}
-                </div>
+                <div className="currency-label">{displayCurrency}</div>
               </div>
-              <div className="result-subtitle">
-                Daily spending budget
-              </div>
+              <div className="result-subtitle">Daily spending budget</div>
               <div className={`result-meta ${convertedDisplay ? 'with-conversion' : ''}`}>
                 {daysLeft} day{daysLeft !== 1 ? 's' : ''} left until payday
               </div>
@@ -274,41 +334,38 @@ export default function App(){
 
         {/* Balance and Payday - Side by side */}
         <div className="input-row-container">
-          {/* Balance Input */}
           <div className="glass-card half-width">
-            <label className="field-label">
-              Balance
-            </label>
-            <div className="input-row">
+            <div className="inline-field">
+              <label className="field-label-inline">Balance</label>
               <input
-                type="number"
+                type="text"
                 inputMode="decimal"
-                placeholder="0.00"
+                placeholder="0"
                 value={state.balance}
-                onChange={e => onChange('balance', e.target.value)}
-                className="main-input"
+                onChange={handleBalanceChange}
+                onBlur={handleBalanceBlur}
+                className="main-input-inline"
               />
               <button
                 onClick={() => openCurrencyPicker('src')}
-                className="currency-btn"
+                className="currency-btn-inline"
                 disabled={currenciesLoading}
               >
-                {currenciesLoading ? 'Loading...' : state.srcCurrency}
+                {currenciesLoading ? '...' : state.srcCurrency}
               </button>
             </div>
           </div>
 
-          {/* Payday */}
           <div className="glass-card half-width">
-            <label className="field-label">
-              Payday
-            </label>
-            <input
-              type="date"
-              value={state.paydate}
-              onChange={e => onChange('paydate', e.target.value)}
-              className="date-input"
-            />
+            <div className="inline-field">
+              <label className="field-label-inline">Payday</label>
+              <input
+                type="date"
+                value={state.paydate}
+                onChange={e => onChange('paydate', e.target.value)}
+                className="date-input-inline"
+              />
+            </div>
           </div>
         </div>
 
@@ -317,9 +374,7 @@ export default function App(){
           <div className="currency-toggle">
             <div className="toggle-left">
               <div className="toggle-content">
-                <span className="toggle-text">
-                  Display in different currency
-                </span>
+                <span className="toggle-text">Display in different currency</span>
                 <div className="toggle-subtitle">
                   {state.useConversion ? `Converting to ${state.dstCurrency}` : 'Conversion disabled'}
                 </div>
@@ -345,19 +400,17 @@ export default function App(){
           </div>
         </div>
 
-        {/* PWA Install Button */}
-        <div className="install-section">
-          <button 
-            id="install-btn" 
-            hidden
-            className="install-btn"
-          >
-            Install App
-          </button>
-          <div className="install-hint">
-            On iPhone: Share → "Add to Home Screen"
+        {/* PWA Install Button - Hidden when standalone */}
+        {!isStandalone && (
+          <div className="install-section">
+            <button id="install-btn" hidden className="install-btn">
+              Install App
+            </button>
+            <div className="install-hint">
+              On iPhone: Share → "Add to Home Screen"
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Currency Picker Modal */}
@@ -365,9 +418,7 @@ export default function App(){
         <div className="modal-overlay" onClick={() => setCurrencyPickerOpen(false)}>
           <div className="modal-panel picker" onClick={e => e.stopPropagation()}>
             <div className="modal-handle"></div>
-            <h3 className="modal-title">
-              Select Currency
-            </h3>
+            <h3 className="modal-title">Select Currency</h3>
             <div className="currency-list">
               {currencies.map(([code, name]) => (
                 <button
@@ -388,14 +439,10 @@ export default function App(){
         <div className="modal-overlay" onClick={() => setSettingsOpen(false)}>
           <div className="modal-panel settings" onClick={e => e.stopPropagation()}>
             <div className="modal-handle"></div>
-            <h3 className="modal-title">
-              Settings
-            </h3>
+            <h3 className="modal-title">Settings</h3>
 
             <div className="settings-field">
-              <label className="settings-label">
-                Exchange Rate Provider
-              </label>
+              <label className="settings-label">Exchange Rate Provider</label>
               <select
                 value={state.provider}
                 onChange={e => onChange('provider', e.target.value)}
@@ -411,9 +458,7 @@ export default function App(){
 
             {state.provider === 'exchangerate-host' && (
               <div className="settings-field">
-                <label className="settings-label">
-                  API Key
-                </label>
+                <label className="settings-label">API Key</label>
                 <input
                   type="text"
                   placeholder="Enter your API key"
