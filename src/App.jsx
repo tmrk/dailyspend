@@ -20,7 +20,12 @@ function nextMonthFifteenthISO() {
   const now = new Date()
   const y = now.getFullYear()
   const m = now.getMonth()
-  const d15next = new Date(y, m + 1, 15, 23, 59, 59)
+  const d = now.getDate()
+  
+  // If we haven't passed the 15th yet this month, use current month
+  const targetMonth = d < 15 ? m : m + 1
+  const d15next = new Date(y, targetMonth, 15, 23, 59, 59)
+  
   const yyyy = d15next.getFullYear()
   const mm = String(d15next.getMonth() + 1).padStart(2, '0')
   const dd = String(d15next.getDate()).padStart(2, '0')
@@ -252,15 +257,27 @@ export default function App(){
 
   function handleBalanceChange(e) {
     const value = e.target.value
-    // Allow only numbers, commas, and one decimal point
-    if (value === '' || /^[\d,]*\.?\d{0,2}$/.test(value)) {
-      onChange('balance', value)
-    }
+      .replace(/[^\d.]/g, '') // Only allow digits and decimal point
+      .replace(/(\..*)\./g, '$1') // Only allow one decimal point
+    onChange('balance', value)
   }
 
   function handleBalanceBlur(e) {
-    const formatted = formatNumberWithCommas(e.target.value)
+    const rawValue = e.target.value.replace(/,/g, '')
+    const formatted = formatNumberWithCommas(rawValue)
     onChange('balance', formatted)
+  }
+
+  function handleBalanceFocus(e) {
+    // Remove commas when focused
+    const rawValue = e.target.value.replace(/,/g, '')
+    onChange('balance', rawValue)
+  }
+
+  function handleBalanceKeyDown(e) {
+    if (e.key === 'Enter') {
+      e.target.blur()
+    }
   }
 
   function openCurrencyPicker(type) {
