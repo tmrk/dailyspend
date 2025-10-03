@@ -2,10 +2,12 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <meta name="theme-color" content="#667eea" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, interactive-widget=resizes-content" />
+    <meta name="theme-color" content="#667eea" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#667eea" media="(prefers-color-scheme: dark)" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="DailySpend" />
     <meta name="description" content="Calculate your daily spending budget until payday with real-time currency conversion" />
     
@@ -31,23 +33,39 @@
     <style>
       * { 
         box-sizing: border-box; 
+        margin: 0;
+        padding: 0;
       }
       
-      html, body, #root { 
-        height: 100%; 
-        margin: 0; 
-        padding: 0; 
+      :root {
+        --app-height: 100%;
       }
       
-      html {
+      @supports (-webkit-touch-callout: none) {
+        :root {
+          --app-height: -webkit-fill-available;
+        }
+      }
+      
+      html { 
+        height: 100vh;
+        height: var(--app-height);
         overscroll-behavior: none;
         overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: fixed;
       }
       
       body { 
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        height: 100vh;
+        height: var(--app-height);
+        width: 100%;
         color: white;
+        position: fixed;
+        overflow: hidden;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background-attachment: fixed;
         overflow: hidden;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;

@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import './styles.css'
+import SettingsIcon from './components/SettingsIcon'
 import { loadState, saveState } from './lib/storage'
 import { listCurrencies, getRate, formatMoney } from './lib/fx'
 
@@ -74,6 +75,37 @@ export default function App(){
   useEffect(() => { 
     saveState(state) 
   }, [state])
+
+  // handle iOS viewport height
+  useEffect(() => {
+    function setVH() {
+      let vh = window.innerHeight * 0.01;
+      document.documentElement.style.setProperty('--vh', `${vh}px`);
+    }
+    
+    setVH(); // Set initial value
+    window.addEventListener('load', setVH);
+    window.addEventListener('resize', setVH);
+    window.addEventListener('orientationchange', setVH);
+    
+    let lastWidth = window.innerWidth;
+    const resizeHandler = () => {
+      // Only update on width changes to avoid iOS Safari address bar triggers
+      if (lastWidth !== window.innerWidth) {
+        lastWidth = window.innerWidth;
+        setVH();
+      }
+    };
+    
+    window.addEventListener('resize', resizeHandler);
+    
+    return () => {
+      window.removeEventListener('load', setVH);
+      window.removeEventListener('resize', setVH);
+      window.removeEventListener('orientationchange', setVH);
+      window.removeEventListener('resize', resizeHandler);
+    };
+  }, []);
 
   // monitor online status
   useEffect(() => {
@@ -163,12 +195,12 @@ export default function App(){
     out.daysLeft = days
 
     out.amountDisplay = formatMoney(balance, state.srcCurrency)
-    const originalPerDay = balance / days
+    const originalPerDay = Math.floor(balance / days)
 
     if (state.useConversion && state.srcCurrency !== state.dstCurrency && state.lastRate && 
         state.lastRate.from === state.srcCurrency && state.lastRate.to === state.dstCurrency) {
       const convertedAmount = balance * state.lastRate.value
-      const convertedPerDay = convertedAmount / days
+      const convertedPerDay = Math.floor(convertedAmount / days)
       out.convertedDisplay = formatMoney(convertedAmount, state.dstCurrency)
       out.perDay = convertedPerDay
       
@@ -188,9 +220,9 @@ export default function App(){
       const lastValue = state.lastPerDay
       
       if (lastValue !== null && lastValue !== perDay && Math.abs(lastValue - perDay) > 0.01) {
-        // Animate from last value to new value
-        const startValue = lastValue
-        const endValue = perDay
+                  // Animate from last value to new value
+        const startValue = Math.floor(lastValue)
+        const endValue = Math.floor(perDay)
         const duration = 1000 // 1 second
         const startTime = Date.now()
         
@@ -198,16 +230,17 @@ export default function App(){
           const elapsed = Date.now() - startTime
           const progress = Math.min(elapsed / duration, 1)
           
-          // Easing function (ease-out)
-          const easeOut = 1 - Math.pow(1 - progress, 3)
-          const currentValue = startValue + (endValue - startValue) * easeOut
+          // Ease out cubic
+          const easeProgress = 1 - Math.pow(1 - progress, 3)
+          const currentValue = Math.floor(startValue + (endValue - startValue) * easeProgress)
           
           setAnimatedValue(currentValue)
           
           if (progress < 1) {
             requestAnimationFrame(animate)
           } else {
-            setState(s => ({ ...s, lastPerDay: perDay }))
+            setAnimatedValue(null)
+            setState(s => ({ ...s, lastPerDay: endValue }))
           }
         }
         
@@ -272,6 +305,8 @@ export default function App(){
     // Remove commas when focused
     const rawValue = e.target.value.replace(/,/g, '')
     onChange('balance', rawValue)
+    // Select all content
+    e.target.select()
   }
 
   function handleBalanceKeyDown(e) {
@@ -310,7 +345,7 @@ export default function App(){
             className="settings-btn"
             aria-label="Open settings"
           >
-            ⚙️
+            <SettingsIcon />
           </button>
         </div>
       </div>
@@ -360,7 +395,9 @@ export default function App(){
                 placeholder="0"
                 value={state.balance}
                 onChange={handleBalanceChange}
+                onFocus={handleBalanceFocus}
                 onBlur={handleBalanceBlur}
+                onKeyDown={handleBalanceKeyDown}
                 className="main-input-inline"
               />
               <button
@@ -378,8 +415,17 @@ export default function App(){
               <label className="field-label-inline">Payday</label>
               <input
                 type="date"
+                pattern="\d{4}-\d{2}-\d{2}"
+                placeholder="YYYY-MM-DD"
+                required
                 value={state.paydate}
-                onChange={e => onChange('paydate', e.target.value)}
+                onChange={e => {
+                  const value = e.target.value;
+                  // Ensure value is in YYYY-MM-DD format
+                  if (/^\d{4}-\d{2}-\d{2}$/.test(value)) {
+                    onChange('paydate', value);
+                  }
+                }}
                 className="date-input-inline"
               />
             </div>
